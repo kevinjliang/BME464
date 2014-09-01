@@ -21,7 +21,7 @@ float avg = 0; //sum of all elements in the queue
 int avgDenom = 0; //denominator to calculate average
   
 //Zero-crossings detector variables
-boolean wasPositive = false; //was previous value positive; compare to look for a zero-crossing
+boolean wasPositive = true; //was previous value positive; compare to look for a zero-crossing
 float hystThresh = 0.1; //Hysteresis threshold; must cross before another zero-crossing can be detected
 float lastZCrossTime = 0; //to track times between zero-crossings
 float frequency = 0; //equal to 1/(2*period between zero-crossings)  
@@ -49,7 +49,8 @@ void setup(){
 void loop(){
   currentTime = millis();
   
-  if(currentTime > lastReadTime + 200){ //run if 200 ms has elapsed since last execute
+  //read the signal every 200 ms
+  if(currentTime > lastReadTime + 200){
     lastReadTime = currentTime; 
     displayToLCD(read_signal());
   }  
@@ -90,3 +91,21 @@ void displayToLCD(float outVolt) {
   lcd.setCursor(0, 0);
   lcd.print("Voltage: "); lcd.print(outVolt);
 }  
+
+int checkForZeroCrossing() {
+  if(wasPositive){
+    if(trueVal<-hystThresh) {
+      frequency = 1/(2*(currentTime-lastZCrossTime));  
+      wasPositive = false;
+      lastZCrossTime = currentTime;
+    }
+  }
+  else {
+    if(trueVal>hystThresh) {
+      frequency = 1/(2*(currentTime-lastZCrossTime));  
+      wasPositive = true;
+      lastZCrossTime = currentTime;
+    }
+  }  
+  return frequency;
+}
