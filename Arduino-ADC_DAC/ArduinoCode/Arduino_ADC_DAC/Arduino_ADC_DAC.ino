@@ -9,6 +9,7 @@ Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 //Timekeeping variables
 long currentTime = 0; //tracks how long it's been since the program began running
 long lastReadTime = 0; //the last time a reading was taken from the circuit
+long lastDisplayTime = 0; //the last time the LCD screen with updated
 
 //Input voltage variables
 float readVal; //voltage reading from pin A0, from circuit
@@ -26,9 +27,11 @@ float hystThresh = 0.1; //Hysteresis threshold; must cross before another zero-c
 float lastZCrossTime = 0; //to track times between zero-crossings
 float frequency = 0; //equal to 1/(2*period between zero-crossings)  
 
+//Display Variables
+boolean isAC = false;
 
 void setup(){
-  Serial.begin(9600);
+  // Serial.begin(9600); // For printing to console
   
   // LCD initialization
   lcd.begin(16, 2);
@@ -42,7 +45,6 @@ void setup(){
   delay(1000);
   lcd.setCursor(0, 0);
   lcd.clear();
-  
 }
 
 
@@ -52,15 +54,19 @@ void loop(){
   //read the signal every 200 ms
   if(currentTime > lastReadTime + 200){
     lastReadTime = currentTime; 
-    displayToLCD(read_signal());
+    read_signal(); // TODO: need to do something with these read values
   }  
+  
+  if(currentTime > lastDisplayTime + 1000) {
+    lastDisplayTime = currentTime;
+    displayToLCD(); // TODO: need to put something in here or change the input to this function
+  }
 }
 
 
 
 float read_signal(){
   readVal = analogRead(1)* (5.0 / 1023.0); //analogRead maps 0-5 V to 0-1023
-  Serial.println(readVal);
   //Undo the shift and gain circuit
   trueVal = readVal*2 - 5;
     
@@ -89,7 +95,17 @@ float read_signal(){
 void displayToLCD(float outVolt) {
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Voltage: "); lcd.print(outVolt);
+  
+  if(!isAC){ //DC case
+    lcd.print("Voltage: "); lcd.print(outVolt); lcd.print("V");
+    lcd.setCursor(0, 1);    
+    lcd.print("DC");
+  }
+  else{ //AC case; TODO: insert whatever we decide to name the amplitude and frequency variables
+    lcd.print("Amplitude: "); lcd.print(""); lcd.print("V");
+    lcd.setCursor(0, 1);    
+    lcd.print("AC freq: "); lcd.print(""); lcd.print("Hz");
+  }
 }  
 
 int checkForZeroCrossing() {
