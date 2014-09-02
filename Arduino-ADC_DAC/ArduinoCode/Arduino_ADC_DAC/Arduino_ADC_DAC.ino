@@ -2,8 +2,10 @@
 #include <Adafruit_MCP23017.h>
 #include <Adafruit_RGBLCDShield.h>
 
-Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
-
+struct ACdata {
+  float frequency; //equal to 1/(2*period between zero-crossings) 
+  float amplitude;  
+};
 
 //// Declare all variables here as global to avoid re-declaring the same variables in the loop() and running out of memory 
 //Timekeeping variables
@@ -14,6 +16,7 @@ long lastDisplayTime = 0; //the last time the LCD screen with updated
 //Input voltage variables
 float readVal; //voltage reading from pin A0, from circuit
 float trueVal; //readjusted true value
+float V_in; //"final" input value; readjusted + smoothed
   
 //Sliding Window Averager variables
 float slidingWindow[5] = {0,0,0,0,0}; //queue for the five most recent readings
@@ -21,13 +24,19 @@ int nextElement = 0; //rotating index of the array to place the next read val
 float avg = 0; //sum of all elements in the queue
 int avgDenom = 0; //denominator to calculate average
   
-//Zero-crossings detector variables
+//AC variables
 boolean wasPositive = true; //was previous value positive; compare to look for a zero-crossing
+boolean ZCrossDetected = false; 
 float hystThresh = 0.1; //Hysteresis threshold; must cross before another zero-crossing can be detected
-float lastZCrossTime = 0; //to track times between zero-crossings
-float frequency = 0; //equal to 1/(2*period between zero-crossings)  
+float lastZCrossTime = 0; //to track times between zero-crossings 
+float maxVoltage = 0; //Maximum voltage (ie amplitude) detected in an AC signal
+ACdata currentHalfWave = {0, 0}; //characteristics of the half-wave detected between zero-crossings  
+ACdata benchmark = {0, 0}; //characteristics of the half-wave being compared against
+int numConsistencies = 0; //Number of times half-wave characteristics match up;
+float ACtolerannce = 0.1; //Tolerance as to how different amplitude and frequency can be to be considered "consistent"
 
-//Display Variables
+//LCD Display Variables
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 boolean isAC = false;
 
 void setup(){
@@ -51,20 +60,25 @@ void setup(){
 void loop(){
   currentTime = millis();
   
-  //read the signal every 200 ms
-  if(currentTime > lastReadTime + 200){
+  //read the signal every 20 ms
+  if(currentTime > lastReadTime + 20){
     lastReadTime = currentTime; 
-    read_signal(); // TODO: need to do something with these read values
+    V_in = read_signal(); 
+    isAC = zeroCrossingChecker(V_in);
   }  
   
+  //update display every second
   if(currentTime > lastDisplayTime + 1000) {
     lastDisplayTime = currentTime;
-    displayToLCD(); // TODO: need to put something in here or change the input to this function
+    displayToLCD();
   }
+  
+  // TODO: DAC part of the code => output signal to analog pin
 }
 
 
-
+//Reads the input, corrects it back to the original voltage, then applies a sliding window averager
+//Returns averaged (smoothed) voltage value
 float read_signal(){
   readVal = analogRead(1)* (5.0 / 1023.0); //analogRead maps 0-5 V to 0-1023
   //Undo the shift and gain circuit
@@ -92,12 +106,12 @@ float read_signal(){
   return avg/avgDenom;
 }  
 
-void displayToLCD(float outVolt) {
+void displayToLCD() {
   lcd.clear();
   lcd.setCursor(0, 0);
   
   if(!isAC){ //DC case
-    lcd.print("Voltage: "); lcd.print(outVolt); lcd.print("V");
+    lcd.print("Voltage: "); lcd.print(V_in); lcd.print("V");
     lcd.setCursor(0, 1);    
     lcd.print("DC");
   }
@@ -108,20 +122,40 @@ void displayToLCD(float outVolt) {
   }
 }  
 
-int checkForZeroCrossing() {
+// Checks for AC characteristics (amplitude + frequency)
+// Returns true if a zero-crossing is detected, at which point a new half-wave has been measured
+boolean zeroCrossingChecker(float voltage) {
+  if(abs(voltage) > maxVoltage){
+    maxVoltage = abs(voltage);
+  }
+  
+  //Check for zero-crossing in the proper direction
   if(wasPositive){
-    if(trueVal<-hystThresh) {
-      frequency = 1/(2*(currentTime-lastZCrossTime));  
+    if(voltage<-hystThresh) {
+      currentHalfWave.frequency = 1/(2*(currentTime-lastZCrossTime));
+      currentHalfWave.amplitude = maxVoltage;
+      maxVoltage = 0;  
       wasPositive = false;
       lastZCrossTime = currentTime;
+      return true;
     }
   }
   else {
-    if(trueVal>hystThresh) {
-      frequency = 1/(2*(currentTime-lastZCrossTime));  
+    if(voltage>hystThresh) {
+      currentHalfWave.frequency = 1/(2*(currentTime-lastZCrossTime));  
+      currentHalfWave.amplitude = maxVoltage;
+      maxVoltage = 0;  
       wasPositive = true;
       lastZCrossTime = currentTime;
+      return true;
     }
   }  
-  return frequency;
+  
+  return false;
+}
+
+//Characterize the AC signal; compare it with previous amplitudes and frequencies to verify
+//Returns true if passes checks of consistency
+boolean isACsignal(){
+   
 }
