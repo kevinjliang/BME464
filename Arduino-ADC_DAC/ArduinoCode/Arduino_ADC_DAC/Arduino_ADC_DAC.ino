@@ -12,6 +12,7 @@ struct ACdata {
 long currentTime = 0; //tracks how long it's been since the program began running
 long lastReadTime = 0; //the last time a reading was taken from the circuit
 long lastDisplayTime = 0; //the last time the LCD screen with updated
+long lastACUpdate = 0; //the last time AC characteristics were reset
 
 //Input voltage variables
 float readVal; //voltage reading from pin A0, from circuit
@@ -58,8 +59,8 @@ void setup(){
 void loop(){
   currentTime = millis();
   
-  //read the signal every 20 ms
-  if(currentTime > lastReadTime + 20){
+  //read the signal every 10 ms
+  if(currentTime > lastReadTime + 10){
     lastReadTime = currentTime; 
     V_in = read_signal(); 
     ZCrossDetected = zeroCrossing(V_in);
@@ -76,6 +77,10 @@ void loop(){
   if(currentTime > lastDisplayTime + 1000) {
     lastDisplayTime = currentTime;
     displayToLCD();
+  }
+  
+  if(currentTime > lastACUpdate + 5000) {
+    lastACUpdate = currentTime;
     prevZCross = false;
     isAC = false;
   }
@@ -153,7 +158,7 @@ boolean zeroCrossing(float voltage) {
 struct ACdata characterizeAC(){
   //build halfwave object
   ACdata halfWave;
-  halfWave.frequency = 1 / (2 * (currentTime - lastZCrossTime));
+  halfWave.frequency = 1 / (2 * (currentTime - lastZCrossTime)/1000.0);
   halfWave.amplitude = maxVoltage;
   
   //reset variables
