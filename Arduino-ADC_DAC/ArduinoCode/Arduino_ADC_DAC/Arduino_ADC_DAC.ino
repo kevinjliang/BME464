@@ -38,6 +38,9 @@ struct ACdata currentHalfWave = {0, 0}; //characteristics of the half-wave detec
 Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 boolean isAC = false;
 
+//Designate pin 6 to output
+int outputPin = 6; 
+
 void setup(){
   // Serial.begin(9600); // For printing to console
   
@@ -53,6 +56,10 @@ void setup(){
   delay(1000);
   lcd.setCursor(0, 0);
   lcd.clear();
+  
+  //Set pin 6 (PWM) to output
+  pinMode(outputPin, OUTPUT);
+  
 }
 
 
@@ -72,6 +79,10 @@ void loop(){
       prevZCross = true;  
     }
   }  
+  
+  //Output via PWM pin
+  output(4.2); // TO DO: Change 4.2 to actual output value (input)
+  // May need to change frequency of output
   
   //update display every second
   if(currentTime > lastDisplayTime + 1000) {
@@ -118,6 +129,22 @@ float read_signal(){
   return avg/avgDenom;
 }  
 
+//Output digital to analog using PWM
+void output(float outputVoltage){
+  if (outputVoltage > 5){
+    outputVoltage = 5;
+  }
+  else if (outputVoltage < 0){
+    outputVoltage = 0;
+  }
+  else{
+  outputVoltage = (outputVoltage/5)*255;
+  analogWrite(outputPin, outputVoltage);
+  }
+}
+
+
+//Display Information on LCD
 void displayToLCD() {
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -167,3 +194,5 @@ struct ACdata characterizeAC(){
   
   return halfWave;
 }
+
+
