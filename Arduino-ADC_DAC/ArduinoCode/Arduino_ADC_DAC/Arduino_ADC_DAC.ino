@@ -58,8 +58,8 @@ void setup(){
 void loop(){
   currentTime = millis();
   
-  //read the signal every 20 ms
-  if(currentTime > lastReadTime + 20){
+  //read the signal every 10 ms
+  if(currentTime > lastReadTime + 10){
     lastReadTime = currentTime; 
     V_in = read_signal(); 
     ZCrossDetected = zeroCrossing(V_in);
@@ -153,7 +153,7 @@ boolean zeroCrossing(float voltage) {
 struct ACdata characterizeAC(){
   //build halfwave object
   ACdata halfWave;
-  halfWave.frequency = 1 / (2 * (currentTime - lastZCrossTime));
+  halfWave.frequency = 1 / (2 * (currentTime - lastZCrossTime)/1000.0);
   halfWave.amplitude = maxVoltage;
   
   //reset variables
