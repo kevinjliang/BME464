@@ -27,8 +27,8 @@ int avgDenom = 0; //denominator to calculate average
   
 //AC variables
 boolean wasPositive = true; //was previous value positive; compare to look for a zero-crossing
-boolean ZCrossDetected = false; 
 boolean prevZCross = false;
+boolean ZCrossInWindow = false;
 float hystThresh = 0.1; //Hysteresis threshold; must cross before another zero-crossing can be detected
 float lastZCrossTime = 0; //to track times between zero-crossings 
 float maxVoltage = 0; //Maximum voltage (ie amplitude) detected in an AC signal
@@ -59,7 +59,6 @@ void setup(){
   
   //Set pin 6 (PWM) to output
   pinMode(outputPin, OUTPUT);
-  
 }
 
 
@@ -70,33 +69,33 @@ void loop(){
   if(currentTime > lastReadTime + 10){
     lastReadTime = currentTime; 
     V_in = read_signal(); 
-    ZCrossDetected = zeroCrossing(V_in);
-    if(ZCrossDetected) {
+    if(zeroCrossing(trueVal)) {
       if(prevZCross) {
         currentHalfWave = characterizeAC();  
         isAC = true;
+        ZCrossInWindow = true;
       }
       prevZCross = true;  
     }
   }  
   
   //Output via PWM pin
-  output(4.2); // TO DO: Change 4.2 to actual output value (input)
-  // May need to change frequency of output
+  output(trueVal); // TO DO: May need to change frequency of output
   
   //update display every second
   if(currentTime > lastDisplayTime + 1000) {
     lastDisplayTime = currentTime;
     displayToLCD();
+    prevZCross = false;
   }
   
   if(currentTime > lastACUpdate + 5000) {
     lastACUpdate = currentTime;
-    prevZCross = false;
-    isAC = false;
+    if(!ZCrossInWindow) {
+      isAC = false;
+    }
+    ZCrossInWindow = false;
   }
-  
-  // TODO: DAC part of the code => output signal to analog pin
 }
 
 
