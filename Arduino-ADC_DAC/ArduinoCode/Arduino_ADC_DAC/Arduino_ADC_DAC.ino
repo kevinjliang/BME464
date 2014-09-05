@@ -164,19 +164,84 @@ String convertToBinary(float decimal){
   String binary= "";
   
   //Add sign of voltage
-  if(decimal<2.5){
+  if(decimal<0){
     binary = binary + "-";
   }
   else{
     binary = binary + "+";
   }
-  //Add ones place
+  // TO DO: Convert this sign to a binary sign instead of the actual character
+  
+  
+  //Add ones place in BINARY
  int ones = floor(decimal);
- binary = binary + ones + ".";
+ binary = binary + String(ones,BIN) + ".";
  
  //Add decimal places
  float fraction = decimal - ones;
- if((fraction - .0625)<=.0625){
+ 
+ //Alternative Algorithm
+ if(fraction - .5 >=0){
+   binary = binary + "1";
+   fraction = fraction -.5;
+ }
+ else{
+   binary = binary +"0";
+ }
+ 
+ if(fraction - .25 >=0){
+   binary = binary + "1";
+   fraction = fraction -.25;
+ }
+ else{
+   binary = binary + "0";
+ }
+ 
+ if(fraction - .125 >=0){
+   binary = binary + "1";
+   fraction = fraction -.125;
+ }
+ else{
+   binary = binary + "0";
+ }
+
+if(fraction - .0625 >=0){
+ binary = binary + "1";
+ fraction = fraction -.0625; 
+}
+else{
+  binary = binary + "0";
+}
+
+if(fraction - .03125 >=0){
+  binary = binary + "1";
+  fraction = fraction -.03125;
+}
+else{
+  binary = binary + "0";
+}
+
+if(fraction - .015625 >=0){
+  binary = binary + "1";
+  fraction = fraction - .015625;
+}
+else{
+  binary = binary + "0'";
+} 
+
+if(fraction - .0078125 >=0){
+  binary = binary + "1";
+  fraction = fraction - .0078125;
+}
+else{
+  binary = binary +"0";
+}
+ /*
+ // Brute Force Method
+ if (fraction <= .03125){
+   binary = binary + "0000"
+ }
+ else if((fraction - .0625)<=.0625){
    binary = binary + "0001";
  } 
  else if((fraction - .125)<=.0625){
@@ -221,6 +286,7 @@ String convertToBinary(float decimal){
  else{
    binary = binary + "1111";
  }
+ */
   return binary;
 }
 
