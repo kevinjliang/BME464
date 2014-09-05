@@ -172,6 +172,7 @@ String convertToBinary(float decimal){
   }
   // TO DO: Convert this sign to a binary sign instead of the actual character
   
+  decimal = abs(decimal);
   
   //Add ones place in BINARY
  int ones = floor(decimal);
@@ -236,6 +237,7 @@ if(fraction - .0078125 >=0){
 else{
   binary = binary +"0";
 }
+
  /*
  // Brute Force Method
  if (fraction <= .03125){
