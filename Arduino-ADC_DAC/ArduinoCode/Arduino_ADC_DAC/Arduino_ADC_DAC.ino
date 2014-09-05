@@ -80,7 +80,7 @@ void loop(){
   }  
   
   //Output via PWM pin
-  output(trueVal); // TO DO: May need to change frequency of output
+  output(abs(trueVal)); // TO DO: May need to change frequency of output
   
   //update display every second
   if(currentTime > lastDisplayTime + 1000) {
