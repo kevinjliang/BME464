@@ -149,7 +149,7 @@ void displayToLCD() {
   lcd.setCursor(0, 0);
   
   if(!isAC){ //DC case
-    lcd.print("Voltage: "); lcd.print(V_in); lcd.print("V");
+    lcd.print("V: "); lcd.print(convertToBinary(V_in)); lcd.print("V");
     lcd.setCursor(0, 1);    
     lcd.print("DC");
   }
@@ -159,6 +159,71 @@ void displayToLCD() {
     lcd.print("AC freq: "); lcd.print(currentHalfWave.frequency); lcd.print("Hz");
   }
 }  
+
+String convertToBinary(float decimal){
+  String binary= "";
+  
+  //Add sign of voltage
+  if(decimal<2.5){
+    binary = binary + "-";
+  }
+  else{
+    binary = binary + "+";
+  }
+  //Add ones place
+ int ones = floor(decimal);
+ binary = binary + ones + ".";
+ 
+ //Add decimal places
+ float fraction = decimal - ones;
+ if((fraction - .0625)<=.0625){
+   binary = binary + "0001";
+ } 
+ else if((fraction - .125)<=.0625){
+   binary = binary + "0010";
+ } 
+ else if((fraction - .1825)<=.0625){
+   binary = binary + "0011";
+ } 
+  else if((fraction - .25)<=.0625){
+   binary = binary + "0100";
+ } 
+  else if((fraction - .3125)<=.0625){
+   binary = binary + "0101";
+ } 
+  else if((fraction - .375)<=.0625){
+   binary = binary + "0110";
+ } 
+  else if((fraction - .4375)<=.0625){
+   binary = binary + "0111";
+ } 
+  else if((fraction - .5)<=.0625){
+   binary = binary + "1000";
+ } 
+  else if((fraction - .5625)<=.0625){
+   binary = binary + "1001";
+ } 
+  else if((fraction - .625)<=.0625){
+   binary = binary + "1010";
+ } 
+  else if((fraction - .6875)<=.0625){
+   binary = binary + "1011";
+ } 
+  else if((fraction - .75)<=.0625){
+   binary = binary + "1100";
+ } 
+  else if((fraction - .8125)<=.0625){
+   binary = binary + "1101";
+ } 
+  else if((fraction - .875)<=.0625){
+   binary = binary + "1110";
+ } 
+ else{
+   binary = binary + "1111";
+ }
+  return binary;
+}
+
 
 boolean zeroCrossing(float voltage) {
   if(abs(voltage) > maxVoltage){
