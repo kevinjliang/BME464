@@ -38,8 +38,9 @@ struct ACdata currentHalfWave = {0, 0}; //characteristics of the half-wave detec
 Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 boolean isAC = false;
 
-//Designate pin 6 to output
+//Define Pines
 int outputPin = 6; 
+int logicPin = 7;
 
 void setup(){
   // Serial.begin(9600); // For printing to console
@@ -59,6 +60,9 @@ void setup(){
   
   //Set pin 6 (PWM) to output
   pinMode(outputPin, OUTPUT);
+  
+  //Set pin 7 to logic for MUX
+  pinMode(logicPin, OUTPUT);
 }
 
 
@@ -80,6 +84,12 @@ void loop(){
   }  
   
   //Output via PWM pin
+  if(trueVal<0){ //if voltage is less than 0, then MUX will see LOW
+  digitalWrite(logicPin, LOW);
+  }
+  else{ // if voltage is greater than 0, then MUX will see HIGH
+  digitalWrite(logicPin, HIGH);
+  }
   output(abs(trueVal)); // TO DO: May need to change frequency of output
   
   //update display every second
