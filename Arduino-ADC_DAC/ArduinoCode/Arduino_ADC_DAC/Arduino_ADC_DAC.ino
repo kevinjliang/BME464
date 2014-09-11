@@ -10,7 +10,6 @@ struct ACdata {
 //// Declare all variables here as global to avoid re-declaring the same variables in the loop() and running out of memory 
 //Timekeeping variables
 long currentTime = 0; //tracks how long it's been since the program began running
-long lastReadTime = 0; //the last time a reading was taken from the circuit
 long lastDisplayTime = 0; //the last time the LCD screen with updated
 long lastACUpdate = 0; //the last time AC characteristics were reset
 
@@ -61,7 +60,7 @@ void setup(){
   //Set pin 6 (PWM) to output
   pinMode(outputPin, OUTPUT);
 
-  //Set pin 2 to logic for MUX
+  //Set pin 2 to logic for MUX to control sign of output
   pinMode(logicPin, OUTPUT);
 }
 
@@ -69,19 +68,18 @@ void setup(){
 void loop(){
   currentTime = millis();
 
-  //read the signal every 10 ms
-  if(currentTime > lastReadTime + 10){
-    lastReadTime = currentTime; 
-    V_in = read_signal(); 
-    if(zeroCrossing(trueVal)) {
-      if(prevZCross) {
-        currentHalfWave = characterizeAC();  
-        isAC = true;
-        ZCrossInWindow = true;
-      }
-      prevZCross = true;  
+  //read the signal as often as you can
+  V_in = read_signal(); 
+  
+  //Check for zero-crossing (ie, is this AC?)
+  if(zeroCrossing(trueVal)) {
+    if(prevZCross) {
+      currentHalfWave = characterizeAC();  
+      isAC = true;
+      ZCrossInWindow = true;
     }
-  }  
+    prevZCross = true;  
+  }
 
   //Output via PWM pin
   output(abs(trueVal)); // TO DO: May need to change frequency of output
@@ -109,7 +107,7 @@ float read_signal(){
   readVal = analogRead(1)* (5.0 / 1023.0); //analogRead maps 0-5 V to 0-1023
   //Undo the shift and gain circuit
   trueVal = readVal*2 - 5;
-
+ 
   slidingWindow[nextElement] = trueVal;
   avg = 0;
   for(int i=0; i<5; i++){
