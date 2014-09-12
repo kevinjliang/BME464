@@ -110,13 +110,13 @@ void loop(){
   if(currentTime > lastDisplayTime + 1000) {
     lastDisplayTime = currentTime;
     displayToLCD();
-    prevZCross = false;
   }
 
   if(currentTime > lastACUpdate + 5000) {
     lastACUpdate = currentTime;
     if(!ZCrossInWindow) {
       isAC = false;
+      prevZCross = false;
     }
     ZCrossInWindow = false;
   }
@@ -325,7 +325,7 @@ struct ACdata characterizeAC(){
   //build halfwave object
   ACdata halfWave;
   halfWave.frequency = 1 / (2 * (currentTime - lastZCrossTime)/1000.0);
-  halfWave.amplitude = maxVoltage;
+  halfWave.amplitude = maxVoltage; 
 
   //reset variables
   lastZCrossTime = currentTime;
