@@ -1,6 +1,9 @@
 #include <Wire.h>
 #include <Adafruit_MCP23017.h>
 #include <Adafruit_RGBLCDShield.h>
+// avr-libc library includes (for interrupts)
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 struct ACdata {
   float frequency; //equal to 1/(2*period between zero-crossings) 
@@ -62,13 +65,27 @@ void setup(){
 
   //Set pin 2 to logic for MUX to control sign of output
   pinMode(logicPin, OUTPUT);
+  
+  // initialize Timer1 for interrupts
+  cli();          // disable global interrupts
+  TCCR1A = 0;     // set entire TCCR1A register to 0
+  TCCR1B = 0;     // same for TCCR1B
+ 
+  // set compare match register to 10 ms timer count:
+  OCR1A = 156;
+  // turn on CTC mode:
+  TCCR1B |= (1 << WGM12);
+  // Set CS10 and CS12 bits for 1024 prescaler:
+  TCCR1B |= (1 << CS10);
+  TCCR1B |= (1 << CS12);
+  // enable timer compare interrupt:
+  TIMSK1 |= (1 << OCIE1A);
+  sei();          // enable global interrupts
 }
 
-
-void loop(){
-  currentTime = millis();
-
-  //read the signal as often as you can
+//Interrupt code, runs every 10 ms
+ISR(TIMER1_COMPA_vect)
+{
   V_in = read_signal(); 
   
   //Check for zero-crossing (ie, is this AC?)
@@ -83,6 +100,11 @@ void loop(){
 
   //Output via PWM pin
   output(abs(trueVal)); // TO DO: May need to change frequency of output
+}
+
+
+void loop(){
+  currentTime = millis();
 
   //update display every second
   if(currentTime > lastDisplayTime + 1000) {
