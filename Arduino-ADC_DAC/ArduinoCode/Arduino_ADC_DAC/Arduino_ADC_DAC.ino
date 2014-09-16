@@ -86,6 +86,8 @@ void setup(){
 //Interrupt code, runs every 10 ms
 ISR(TIMER1_COMPA_vect)
 {
+  currentTime = millis();
+
   V_in = read_signal(); 
   
   //Check for zero-crossing (ie, is this AC?)
@@ -99,19 +101,20 @@ ISR(TIMER1_COMPA_vect)
   }
 
   //Output via PWM pin
-  output(abs(trueVal)); // TO DO: May need to change frequency of output
+  output(abs(trueVal));
 }
 
 
 void loop(){
   currentTime = millis();
-
+  
   //update display every second
   if(currentTime > lastDisplayTime + 1000) {
     lastDisplayTime = currentTime;
     displayToLCD();
   }
-
+  
+  //reset AC assumption every 5 seconds if no longer AC
   if(currentTime > lastACUpdate + 5000) {
     lastACUpdate = currentTime;
     if(!ZCrossInWindow) {
@@ -168,7 +171,7 @@ void output(float outputVoltage){
     outputVoltage = 0;
   }
   else{
-    outputVoltage = (outputVoltage/5)*255;
+    outputVoltage = (outputVoltage/5)*255; //Arduino output range from 0-255 for 0%-100% duty cycle
     analogWrite(outputPin, outputVoltage);
   }
 }
