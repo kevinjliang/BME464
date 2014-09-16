@@ -12,7 +12,7 @@ struct ACdata {
 
 //// Declare all variables here as global to avoid re-declaring the same variables in the loop() and running out of memory 
 //Timekeeping variables
-long currentTime = 0; //tracks how long it's been since the program began running
+volatile long currentTime = 0; //tracks how long it's been since the program began running; volatile to allow interrupts to modify it
 long lastDisplayTime = 0; //the last time the LCD screen with updated
 long lastACUpdate = 0; //the last time AC characteristics were reset
 
